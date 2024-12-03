@@ -9,12 +9,12 @@ TEST_INP = """
 TEST_OUT_P1 = 2
 TEST_OUT_P2 = 4
 
-function clean_input(inp:: String)
+function clean_input(inp::String)
     # Split the input into lines, then split each line into integers
     [parse.(Int, split(line)) for line in split(strip(inp), "\n")]
 end
 
-function pred(x::Int, rev::Bool=True)::Bool
+function pred(x::Int, rev::Bool = True)::Bool
     # diff between levels 0 < abs(x) <= 3
     cond = 0 < abs(x) <= 3
     # must be an increasing or decreasing sequence
@@ -33,7 +33,7 @@ function is_safe_with_replacement(inp::Vector{Int64})::Int
         return 1
     end
 
-    for i in 1:length(inp)
+    for i = 1:length(inp)
         subset = vcat(inp[1:i-1], inp[i+1:end])
         if is_safe(subset) == 1
             return 1
