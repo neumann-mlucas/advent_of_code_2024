@@ -1,6 +1,6 @@
 using LinearAlgebra
 
-TEST_INP_P1 = """
+TEST_INP = """
 MMMSXXMASM
 MSAMXMSMSA
 AMXSXMAAMM
@@ -12,7 +12,6 @@ SAXAMASAAA
 MAMMMXMMMM
 MXMXAXMASX
 """
-
 TEST_OUT_P1 = 18
 TEST_OUT_P2 = 9
 
@@ -57,16 +56,37 @@ function find_matches(inp::Vector{String})::Int
     total
 end
 
+function count_xmas(m::Matrix{Char})::Int
+    (rows, cols), total = size(m), 0
+    for idx in CartesianIndices(m)
+        i, j = idx.I
+
+        # out of bounds and not A
+        if i == 1 || j == 1 || i == rows || j == cols || m[i, j] != 'A'
+            continue
+        end
+
+        # both diagonals have M and S
+        d1 = setdiff(['M', 'S'], [m[i-1, j-1], m[i+1, j+1]]) == []
+        d2 = setdiff(['M', 'S'], [m[i-1, j+1], m[i+1, j-1]]) == []
+
+        if d1 && d2
+            total += 1
+        end
+    end
+    total
+end
+
 day04p1 = find_matches ∘ gen_all ∘ clean_input
-# day04p2 = clean_input
+day04p2 = count_xmas ∘ clean_input
 
 function main()
-    @assert day04p1(TEST_INP_P1) == TEST_OUT_P1
-    # @assert day04p2(TEST_INP_P2) == TEST_OUT_P2
+    @assert day04p1(TEST_INP) == TEST_OUT_P1
+    @assert day04p2(TEST_INP) == TEST_OUT_P2
 
     input = read(open("dat/day04.txt", "r"), String)
     day04p1(input) |> println
-    # day04p2(input) |> println
+    day04p2(input) |> println
 end
 
 main()
