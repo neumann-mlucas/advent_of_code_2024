@@ -20,8 +20,8 @@ function toblocks(diskmap::Vector{Int}, id::Int = 0, phase::Bool = true)::Vector
 end
 
 function reorder_blocks(blocks::Vector{Int})::Vector{Int}
-    end_block = findlast(x->x>-1, blocks)
-    free_space = findfirst(x->x==-1, blocks)
+    end_block = findlast(x -> x > -1, blocks)
+    free_space = findfirst(x -> x == -1, blocks)
 
     if free_space > end_block
         return blocks
@@ -29,12 +29,12 @@ function reorder_blocks(blocks::Vector{Int})::Vector{Int}
 
     blocks[free_space] = blocks[end_block]
     blocks[end_block] = -1
-    
+
     return reorder_blocks(blocks)
 end
 
 function reorder_files(blocks::Vector{Int})::Vector{Int}
-    [1,2,3]
+    [1, 2, 3]
 end
 
 function checksum(blocks::Vector{Int})::Int
@@ -43,7 +43,7 @@ function checksum(blocks::Vector{Int})::Int
         if value == -1
             break
         end
-        total += (index-1) * value
+        total += (index - 1) * value
     end
     total
 end
@@ -54,13 +54,8 @@ day09p2 = checksum ∘ reorder_files ∘ toblocks ∘ clean_input
 function main()
     @assert day09p1(TEST_INP) == TEST_OUT_P1
     # @assert day09p2(TEST_INP) == TEST_OUT_P2
-    
+
     input = read(open("dat/day09.txt", "r"), String)
-
-    @show length(input)  
-    @show length(clean_input(input))
-    @show length(toblocks(clean_input(input)))
-
     day09p1(input) |> println
     # day09p2(input) |> println
 end

@@ -47,7 +47,11 @@ function get_all_antinodes(m::AntenaMap, mult::UnitRange)::Set{CartesianIndex}
     return antinodes
 end
 
-function get_antinodes(grid::Matrix{Char}, id::Char, mult::UnitRange)::Vector{CartesianIndex}
+function get_antinodes(
+    grid::Matrix{Char},
+    id::Char,
+    mult::UnitRange,
+)::Vector{CartesianIndex}
     M, N = size(grid)
 
     anthenas = findall(x -> x == id, grid)
@@ -55,8 +59,8 @@ function get_antinodes(grid::Matrix{Char}, id::Char, mult::UnitRange)::Vector{Ca
 
     all_antinodes = []
     for (p, q) in pairs
-        p_antinodes = [p + n * (p-q) for n in  mult]
-        q_antinodes = [q + n * (q-p) for n in  mult]
+        p_antinodes = [p + n * (p - q) for n in mult]
+        q_antinodes = [q + n * (q - p) for n in mult]
         push!(all_antinodes, [node for node in p_antinodes if inbounds(node, M, N)]...)
         push!(all_antinodes, [node for node in q_antinodes if inbounds(node, M, N)]...)
     end
@@ -67,8 +71,8 @@ function inbounds(p::CartesianIndex, m::Int, n::Int)::Bool
     0 < p.I[1] <= m && 0 < p.I[2] <= n
 end
 
-day08p1(inp) = get_all_antinodes(clean_input(inp),1:1) |> length
-day08p2(inp) = get_all_antinodes(clean_input(inp),0:50) |> length
+day08p1(inp) = get_all_antinodes(clean_input(inp), 1:1) |> length
+day08p2(inp) = get_all_antinodes(clean_input(inp), 0:50) |> length
 
 function main()
     @assert day08p1(TEST_INP) == TEST_OUT_P1
