@@ -5,20 +5,20 @@ TEST_OUT_P1 = 55312
 TEST_OUT_P2 = 65601038650482
 
 function clean_input(inp::String)::Dict{Int,Int}
-    Dict(i=>1 for i in parse.(Int, split(strip(inp))))
+    Dict(i => 1 for i in parse.(Int, split(strip(inp))))
 end
 
 @inline function apply_rule(val::Int)::Vector{Int}
     if val == 0
         return [1]
     elseif ndigits(val) % 2 == 0
-        return Iterators.partition(digits(val), ndigits(val)÷2) .|> undigit
-    else 
+        return Iterators.partition(digits(val), ndigits(val) ÷ 2) .|> undigit
+    else
         return [val * 2024]
     end
 end
 
-function blink(stones::Dict{Int,Int})::Dict{Int, Int}
+function blink(stones::Dict{Int,Int})::Dict{Int,Int}
     d = (hist(apply_rule(stone), n) for (stone, n) in pairs(stones))
     mergewith(+, d...)
 end
@@ -33,8 +33,8 @@ function undigit(d)
     return s
 end
 
-function hist(vec::Vector{Int}, n::Int)::Dict{Int, Int}
-    dict = Dict{Int, Int}()
+function hist(vec::Vector{Int}, n::Int)::Dict{Int,Int}
+    dict = Dict{Int,Int}()
 
     for val in vec
         haskey(dict, vec) ? dict[val] += n : dict[val] = n
