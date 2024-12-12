@@ -8,19 +8,22 @@ function clean_input(inp::String)::Dict{Int,Int}
     Dict(i => 1 for i in parse.(Int, split(strip(inp))))
 end
 
-@inline function apply_rule(val::Int)::Vector{Int}
-    if val == 0
-        return [1]
-    elseif ndigits(val) % 2 == 0
-        return Iterators.partition(digits(val), ndigits(val) ÷ 2) .|> undigit
-    else
-        return [val * 2024]
-    end
-end
-
 function blink(stones::Dict{Int,Int})::Dict{Int,Int}
-    d = (hist(apply_rule(stone), n) for (stone, n) in pairs(stones))
-    mergewith(+, d...)
+    next = Dict{Int,Int}()
+
+    for (k, v) in pairs(stones)
+        if k == 0
+            next[1] = get(next, 1, 0) + v
+        elseif ndigits(k) % 2 == 0
+            a, b = Iterators.partition(digits(k), ndigits(k) ÷ 2) .|> undigit
+            next[a] = get(next, a, 0) + v
+            next[b] = get(next, b, 0) + v
+        else
+            next[k*2024] = get(next, k * 2024, 0) + v
+        end
+    end
+
+    return next
 end
 
 function undigit(d)
@@ -31,20 +34,6 @@ function undigit(d)
         mult *= 10
     end
     return s
-end
-
-function hist(vec::Vector{Int}, n::Int)::Dict{Int,Int}
-    dict = Dict{Int,Int}()
-
-    for val in vec
-        haskey(dict, vec) ? dict[val] += n : dict[val] = n
-    end
-
-    if length(vec) == 2 && vec[1] == vec[2]
-        dict[vec[1]] *= 2
-    end
-
-    dict
 end
 
 apply(f::Function, n::Int) = reduce(∘, fill(f, n))
