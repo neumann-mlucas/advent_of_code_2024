@@ -1,3 +1,4 @@
+using Images
 import Base.Iterators
 
 TEST_INP = """
@@ -13,7 +14,7 @@ MIIISIJEEE
 MMMISSJEEE
 """
 TEST_OUT_P1 = 1930
-TEST_OUT_P2 = 65601038650482
+TEST_OUT_P2 = 1206
 
 const MOVES = [
     CartesianIndex(-1, 0),
@@ -21,12 +22,13 @@ const MOVES = [
     CartesianIndex(0, -1),
     CartesianIndex(0, 1),
 ]
+U, D, L, R = MOVES
 
 function clean_input(inp::String)::Matrix{Char}
     hcat(collect.(split(strip(inp)))...)
 end
 
-@inline function inbounds(p::CartesianIndex, m::Matrix)::Bool
+@inline function inbounds(p, m)::Bool
     0 < p.I[1] <= size(m)[1] && 0 < p.I[2] <= size(m)[2]
 end
 
@@ -56,10 +58,46 @@ function flood_perimeter(p::CartesianIndex, m::Matrix{Char}, seen::Matrix{Bool})
     total
 end
 
-function calc_fence(m::Matrix{Char})::Int
-    seen_area = fill(false, size(m)...)
+function get_shared_borders(m::Matrix{Bool})::Int
+    M = padarray(m, Fill(false, (1, 1)))
 
     total = 0
+    for p in CartesianIndices(M)
+        if !inbounds(p, M) || !M[p]
+            continue
+        end
+
+        # __
+        # XP
+        if !M[p+U] && M[p+L] && !M[p+U+L]
+            total += 1
+        end
+
+        # XP
+        # __
+        if !M[p+D] && M[p+L] && !M[p+D+L]
+            total += 1
+        end
+
+        # X_
+        # P_
+        if !M[p+L] && M[p+U] && !M[p+U+L]
+            total += 1
+        end
+
+        # _X
+        # _P
+        if !M[p+R] && M[p+U] && !M[p+U+R]
+            total += 1
+        end
+    end
+    total
+end
+
+function calc_fence(m::Matrix{Char})::Tuple{Int,Int}
+    seen_area = fill(false, size(m)...)
+
+    p1, p2 = 0, 0
     for p in CartesianIndices(m)
         if seen_area[p]
             continue
@@ -68,36 +106,23 @@ function calc_fence(m::Matrix{Char})::Int
         area = flood_area(p, m, seen_area)
         seen_perm = fill(false, size(m)...)
         perm = flood_perimeter(p, m, seen_perm)
-        total += area * perm
+        shared_borders = get_shared_borders(seen_perm)
+        p1 += area * perm
+        p2 += area * (perm - shared_borders)
     end
-    return total
+    return (p1, p2)
 end
 
-function print_grid(m::Matrix{Bool})
-    tmp = mapslices(join, Int.(m), dims = 2)
-    println.(join(tmp, '\n'))
-    println()
-end
-
-function print_grid(m::Matrix{Char})
-    tmp = mapslices(join, m, dims = 2)
-    println.(join(tmp, '\n'))
-    println()
-end
-
-day12p1(inp) = clean_input(inp) |> calc_fence
-# day12p2(inp) = clean_input(inp) |> apply(blink, 75) |> values |> sum
+day12p1(inp) = clean_input(inp) |> calc_fence |> x -> x[1]
+day12p2(inp) = clean_input(inp) |> calc_fence |> x -> x[2]
 
 function main()
-    m = clean_input(TEST_INP)
-    calc_fence(m) |> println
-
     @assert day12p1(TEST_INP) == TEST_OUT_P1
-    # @assert day12p2(TEST_INP) == TEST_OUT_P2
+    @assert day12p2(TEST_INP) == TEST_OUT_P2
 
     input = read(open("dat/day12.txt", "r"), String)
     day12p1(input) |> println
-    # day12p2(input) |> println
+    day12p2(input) |> println
 end
 
 main()
