@@ -53,7 +53,7 @@ end
 
 function print_puzzle(p::Puzzle)
     g = copy(p.grid)
-    g = mapslices(join, g, dims = 2)
+    g = mapslices(join, g, dims=2)
 
     print("\e[H\e[2J")
     println()
@@ -110,16 +110,15 @@ function rpush(g::Matrix{Char}, p::CartesianIndex, d::CartesianIndex)::Bool
     end
 end
 
-function move(p::Puzzle)
-    move = popfirst!(p.moves)
-    if rpush(p.grid, p.robot, move)
-        p.robot = p.robot + move
+function move(p::Puzzle, m::CartesianIndex)
+    if rpush(p.grid, p.robot, m)
+        p.robot = p.robot + m
     end
 end
 
 function run(p::Puzzle)::Vector{CartesianIndex}
-    while length(p.moves) > 1
-        move(p)
+    for m in p.moves
+        move(p, m)
     end
     # print_puzzle(p)
     findall(x -> x == 'O', p.grid)
