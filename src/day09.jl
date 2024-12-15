@@ -8,7 +8,7 @@ function clean_input(inp::String)::Vector{Int}
     parse.(Int, collect(strip(inp)))
 end
 
-function toblocks(diskmap::Vector{Int}, id::Int=0, phase::Bool=true)::Vector{Int}
+function toblocks(diskmap::Vector{Int}, id::Int = 0, phase::Bool = true)::Vector{Int}
     if length(diskmap) == 0
         return []
     end
