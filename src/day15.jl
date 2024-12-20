@@ -53,7 +53,7 @@ end
 
 function print_puzzle(p::Puzzle)
     g = copy(p.grid)
-    g = mapslices(join, g, dims=2)
+    g = mapslices(join, g, dims = 2)
 
     print("\e[H\e[2J")
     println()

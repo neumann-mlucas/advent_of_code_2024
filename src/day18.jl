@@ -59,7 +59,7 @@ end
 end
 
 function print_grid(m::Matrix{Char})
-    mapslices(join, m, dims=2) .|> println
+    mapslices(join, m, dims = 2) .|> println
     println()
 end
 
@@ -72,7 +72,7 @@ function print_grid(m::Matrix{Char}, d::Matrix{Float64}, p)
     n[1, 1] = 'S'
     n[size(m)...] = 'T'
 
-    grid = join(mapslices(join, n, dims=2), "\n")
+    grid = join(mapslices(join, n, dims = 2), "\n")
 
     print("\e[H\e[2J")
     println(grid)
