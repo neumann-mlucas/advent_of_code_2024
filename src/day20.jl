@@ -1,4 +1,4 @@
-using Base.Iterators
+using Combinatorics
 using DataStructures
 
 TEST_INP = """
@@ -18,8 +18,8 @@ TEST_INP = """
 #...#...#...###
 ###############
 """
-TEST_OUT_P1 = 0
-TEST_OUT_P2 = "6,1"
+TEST_OUT_P1 = 44
+TEST_OUT_P2 = 285
 
 const MOVES = [
     CartesianIndex(-1, 0),
@@ -42,7 +42,7 @@ function print_grid(m::Matrix{Char})
     println()
 end
 
-function walk_dijkstra(M::Matrix{Char})
+function walk_dijkstra(M::Matrix{Char})::Matrix{Float64}
     start = findfirst(x -> x == 'S', M)
     target = findfirst(x -> x == 'E', M)
 
@@ -74,9 +74,8 @@ function walk_dijkstra(M::Matrix{Char})
     return dist
 end
 
-function find_cheats(D::Matrix{Float64})
+function find_2t_cheats(D::Matrix{Float64}, lim::Int)::Int
     pred(v, i) = v[i] != Inf && v[i+1] == Inf && v[i+2] != Inf
-
     dists = []
 
     for row in eachrow(D)
@@ -94,22 +93,35 @@ function find_cheats(D::Matrix{Float64})
         hist[d] = get!(hist, d, 0) + 1
     end
 
-    return sum((v for (k, v) in pairs(hist) if k > 100), init=0)
+    return sum((v for (k, v) in pairs(hist) if k >= lim), init=0)
 end
 
-day20p1(inp) = clean_input(inp) |> walk_dijkstra |> find_cheats
+function find_20t_cheats(D::Matrix{Float64}, lim::Int)::Int
+    total = 0
+    for (p, q) in combinations(CartesianIndices(D), 2)
+        if D[p] == Inf || D[q] == Inf
+            continue
+        end
 
-function day20p2(inp)
-    return 1
+        manhattan = sum(abs.((p - q).I))
+        if manhattan <= 20
+            d = abs(D[p] - D[q]) - manhattan
+            d >= lim ? total += 1 : nothing
+        end
+    end
+    return total
 end
+
+day20p1(inp, lim) = clean_input(inp) |> walk_dijkstra |> x -> find_2t_cheats(x, lim)
+day20p2(inp, lim) = clean_input(inp) |> walk_dijkstra |> x -> find_20t_cheats(x, lim)
 
 function main()
-    @assert day20p1(TEST_INP) == TEST_OUT_P1
-    # @assert day20p2(TEST_INP) == TEST_OUT_P2
+    @assert day20p1(TEST_INP, 1) == TEST_OUT_P1
+    @assert day20p2(TEST_INP, 50) == TEST_OUT_P2
 
     input = read(open("dat/day20.txt", "r"), String)
-    day20p1(input) |> println
-    # day20p2(input) |> println
+    day20p1(input, 100) |> println
+    day20p2(input, 100) |> println
 end
 
 main()
