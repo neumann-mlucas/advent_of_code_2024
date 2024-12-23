@@ -35,7 +35,7 @@ end
 function print_board(s::BoardState)
     g = copy(s.grid)
     g[s.guard.position] = s.guard.state
-    g = mapslices(join, g, dims = 2)
+    g = mapslices(join, g, dims=2)
     g = join(join(g, '\n'))
     print("\e[H\e[2J")  # clear screen
     println(g)
