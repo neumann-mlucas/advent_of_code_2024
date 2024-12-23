@@ -136,7 +136,7 @@ function walk_bfs(M::Matrix{Char})
             next_cost = cost + get_dist(move, dirc)
 
             # bad adhoc heuristic
-            if next_cost - 5000 > DIST[next]
+            if next_cost - 1000 > DIST[next]
                 continue
             end
 
