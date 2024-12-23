@@ -20,7 +20,7 @@ TEST_INP = """
 #################
 """
 TEST_OUT_P1 = 10048
-TEST_OUT_P2 = 1206
+TEST_OUT_P2 = 64
 
 const MOVES = [
     CartesianIndex(-1, 0),
@@ -29,11 +29,6 @@ const MOVES = [
     CartesianIndex(0, 1),
 ]
 U, D, L, R = MOVES
-
-struct Step
-    loc::CartesianIndex
-    dir::CartesianIndex
-end
 
 function clean_input(inp::String)::Matrix{Char}
     hcat(collect.(split(strip(inp)))...) |> permutedims
@@ -65,19 +60,27 @@ function get_dist(p::CartesianIndex, q::CartesianIndex)::Int
     return 1
 end
 
-function walk_dijkstra(s::CartesianIndex, M::Matrix{Char})
+struct Step
+    loc::CartesianIndex
+    dir::CartesianIndex
+end
+
+function walk_dijkstra(M::Matrix{Char})
+    start = findfirst(x -> x == 'S', M)
+    target = findfirst(x -> x == 'E', M)
+
     dist = fill(Inf, size(M)...)
-    dist[s] = 0
+    dist[start] = 0
 
     Q = PriorityQueue{Step,Int}()
-    Q[Step(s, CartesianIndex(0, 0))] = 0
+    Q[Step(start, CartesianIndex(0, 0))] = 0
 
     while !isempty(Q)
         step = dequeue!(Q)
         p, dir = step.loc, step.dir
 
-        if M[p] == 'E'
-            return dist[p]
+        if p == target
+            return dist[p], dist
         end
 
         for move in MOVES
@@ -93,24 +96,75 @@ function walk_dijkstra(s::CartesianIndex, M::Matrix{Char})
             end
         end
     end
-    return -1
+    return -1, dist
 end
 
-function get_paths(m::Matrix{Char})
-    p = findfirst(x -> x == 'S', m)
-    walk_dijkstra(p, m)
+struct Args
+    curr::CartesianIndex
+    dirc::CartesianIndex
+    cost::Int
+    seen::Set{CartesianIndex}
 end
 
-day16p1(inp) = clean_input(inp) |> get_paths |> Int
-# day16p2(inp) = clean_input(inp) |> calc_fence |> x -> x[2]
+function walk_bfs(M::Matrix{Char})
+    start = findfirst(x -> x == 'S', M)
+    target = findfirst(x -> x == 'E', M)
+
+    SEEN = Set()
+    LIMIT, DIST = walk_dijkstra(M)
+
+    Q = PriorityQueue{Args,Int}()
+    Q[Args(start, CartesianIndex(0, 0), 0, Set())] = 0
+
+    while !isempty(Q)
+        arg = dequeue!(Q)
+        curr, dirc, cost, seen = arg.curr, arg.dirc, arg.cost, arg.seen
+
+        push!(seen, curr)
+
+        if curr == target
+            union!(SEEN, seen)
+            continue
+        end
+
+        for move in MOVES
+            next = curr + move
+            if !inbounds(next, M) || M[next] == '#' || (next in seen)
+                continue
+            end
+
+            next_cost = cost + get_dist(move, dirc)
+
+            # bad adhoc heuristic
+            if next_cost - 5000 > DIST[next]
+                continue
+            end
+
+            # lower bound approximation heuristic
+            if next_cost + manhthan(next, target) <= LIMIT
+                Q[Args(next, move, next_cost, copy(seen))] = next_cost
+            end
+        end
+    end
+
+    return SEEN
+end
+
+manhthan(p, q) = begin
+    turn = iszero.((p - q).I) == (false, false)
+    sum(abs.((p - q).I)) + (turn ? 1000 : 0)
+end
+
+day16p1(inp) = clean_input(inp) |> walk_dijkstra |> x -> Int(x[1])
+day16p2(inp) = clean_input(inp) |> walk_bfs |> length
 
 function main()
     @assert day16p1(TEST_INP) == TEST_OUT_P1
-    # @assert day16p2(TEST_INP) == TEST_OUT_P2
+    @assert day16p2(TEST_INP) == TEST_OUT_P2
 
     input = read(open("dat/day16.txt", "r"), String)
     day16p1(input) |> println
-    # day16p2(input) |> println
+    day16p2(input) |> println
 end
 
 main()
