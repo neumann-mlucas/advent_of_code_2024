@@ -48,10 +48,11 @@ tgd XOR rvg -> z12
 tnw OR pbm -> gnj
 """
 TEST_OUT_P1 = 2024
+TEST_OUT_P2 = 2024
 
 struct Instruction
     opr::String
-    rst::String
+    fst::String
     snd::String
     out::String
 end
@@ -69,8 +70,8 @@ function clean_input(inp::String)
     end
 
     parse_instruction(line) = begin
-        rst, opr, snd, _, out = strip.(split(strip(line)))
-        Instruction(opr, rst, snd, out)
+        fst, opr, snd, _, out = strip.(split(strip(line)))
+        Instruction(opr, fst, snd, out)
     end
     instructions = parse_instruction.(split(strip(instructions), "\n"))
 
@@ -78,16 +79,16 @@ function clean_input(inp::String)
 end
 
 function exec(inst::Instruction, state::Dict)
-    inst.opr == "OR" && (state[inst.out] = state[inst.rst] | state[inst.snd])
-    inst.opr == "XOR" && (state[inst.out] = state[inst.rst] ⊻ state[inst.snd])
-    inst.opr == "AND" && (state[inst.out] = state[inst.rst] & state[inst.snd])
+    inst.opr == "OR" && (state[inst.out] = state[inst.fst] | state[inst.snd])
+    inst.opr == "XOR" && (state[inst.out] = state[inst.fst] ⊻ state[inst.snd])
+    inst.opr == "AND" && (state[inst.out] = state[inst.fst] & state[inst.snd])
     return state
 end
 
 function exec(insts::Vector{Instruction}, state::Dict)
     while !isempty(insts)
         inst = popfirst!(insts)
-        if haskey(state, inst.rst) && haskey(state, inst.snd)
+        if haskey(state, inst.fst) && haskey(state, inst.snd)
             state = exec(inst, state)
         else
             push!(insts, inst)
@@ -97,26 +98,50 @@ function exec(insts::Vector{Instruction}, state::Dict)
     state
 end
 
-function get_number(state::Dict)
+function get_number(state::Dict, char::Char)
     keys_ = sort(collect(keys(state)))
 
     num, iter = 0, 0
-    for k in filter(k -> startswith(k, 'z'), keys_)
+    for k in filter(k -> startswith(k, char), keys_)
         num += state[k] << iter
         iter += 1
     end
     num
 end
 
-day24p1(inp) = exec(clean_input(inp)...) |> get_number
-# day24p2(inp) = clean_input(inp) |> find_all_connected
+function find_swaps(insts::Vector{Instruction}, state::Dict)
+    wrong = Set()
+    for inst in insts
+        if startswith(inst.out, 'z') && inst.opr != "XOR" && inst.out != zlast
+            push!(wrong, inst.out)
+        elseif inst.opr == "XOR" && all(!startswith(reg, ['x', 'y', 'z']) for reg in (inst.out, inst.fst, inst.snd))
+            push!(wrong, inst.out)
+        elseif inst.opr == "AND" && !("x00" in [inst.fst, inst.snd])
+            for sub_inst in insts
+                if (inst.out == sub_inst.fst || inst.out == sub_inst.snd) && sub_inst.opr != "OR"
+                    push!(wrong, inst.out)
+                end
+            end
+        elseif inst.opr == "XOR"
+            for sub_inst in insts
+                if (inst.out == sub_inst.fst || inst.out == sub_inst.snd) && sub_inst.opr == "OR"
+                    push!(wrong, inst.out)
+                end
+            end
+        end
+    end
+    join(sort(collect(wrong)), ",")
+end
+
+day24p1(inp) = exec(clean_input(inp)...) |> x -> get_number(x, 'z')
+day24p2(inp) = find_swaps(clean_input(inp)...)
 
 function main()
     @assert day24p1(TEST_INP) == TEST_OUT_P1
 
     input = read(open("dat/day24.txt", "r"), String)
     day24p1(input) |> println
-    # day24p2(input) |> println
+    day24p2(input) |> println
 end
 
 main()
